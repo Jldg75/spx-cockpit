@@ -1,47 +1,56 @@
-
 import streamlit as st
 import yfinance as yf
 import math
 
-st.set_page_config(page_title="SPX Cockpit v4", layout="wide")
+st.set_page_config(page_title="SPX Cockpit", layout="wide")
 
-st.title("SPX Trading Cockpit v4")
+st.title("SPX Trading Cockpit")
 
-# --- Live market data ---
-try:
-    spx_data = yf.download("^GSPC", period="1d", interval="5m")
-    vix_data = yf.download("^VIX", period="1d", interval="5m")
+# ---------- MARKET DATA ----------
+@st.cache_data(ttl=300)
+def get_market_data():
 
-    spx = float(spx_data["Close"].iloc[-1])
-    vix = float(vix_data["Close"].iloc[-1])
+    try:
+        spx_data = yf.download("^GSPC", period="1d", interval="5m")
+        vix_data = yf.download("^VIX", period="1d", interval="5m")
 
-except:
-    spx = 0
-    vix = 0
+        spx = float(spx_data["Close"].iloc[-1])
+        vix = float(vix_data["Close"].iloc[-1])
 
-m1, m2, m3 = st.columns(3)
-m1.metric("SPX", round(spx,2))
-m2.metric("VIX", round(vix,2))
-gamma_regime = "POSITIVE" if vix < 25 else "VOLATILE"
-m3.metric("Gamma Regime (proxy)", gamma_regime)
+    except:
+        spx = 0
+        vix = 0
+
+    return spx, vix
+
+
+spx, vix = get_market_data()
+
+col1, col2 = st.columns(2)
+
+col1.metric("SPX", round(spx,2))
+col2.metric("VIX", round(vix,2))
 
 st.divider()
 
-# --- Expected Move ---
+# ---------- EXPECTED MOVE ----------
 daily_em = spx * vix / 16 / math.sqrt(365)
 weekly_em = daily_em * math.sqrt(5)
 
 upper = spx + weekly_em
 lower = spx - weekly_em
 
+st.subheader("Expected Move")
+
 e1, e2, e3 = st.columns(3)
+
 e1.metric("Daily EM", round(daily_em,1))
 e2.metric("Weekly EM", round(weekly_em,1))
-e3.metric("Expected Range", f"{round(lower)} — {round(upper)}")
+e3.metric("Range", f"{round(lower)} — {round(upper)}")
 
 st.divider()
 
-# --- Structure inputs (can later be automated via API) ---
+# ---------- INPUT DATA ----------
 st.subheader("Market Structure")
 
 c1, c2, c3, c4 = st.columns(4)
@@ -55,8 +64,9 @@ oi_cluster = st.number_input("Largest OI Cluster", value=0)
 
 st.divider()
 
-# --- Pin Model ---
+# ---------- PIN MODEL ----------
 pin_level = gamma_node if gamma_node else max_pain
+
 distance = abs(spx - pin_level) if pin_level else None
 
 if distance is None:
@@ -69,13 +79,14 @@ else:
     pin_prob = "LOW"
 
 p1, p2, p3 = st.columns(3)
+
 p1.metric("Expected Pin", pin_level if pin_level else "N/A")
 p2.metric("Distance to Pin", round(distance,1) if distance else "N/A")
 p3.metric("Pin Probability", pin_prob)
 
 st.divider()
 
-# --- Trade Signal ---
+# ---------- TRADE SIGNAL ----------
 mid = (put_wall + call_wall)/2 if (put_wall and call_wall) else spx
 
 if abs(spx-mid) < 40:
@@ -90,8 +101,8 @@ st.success(trade_signal)
 
 st.divider()
 
-# --- Suggested Structures ---
-st.subheader("Suggested BWB Structures")
+# ---------- BWB BUILDER ----------
+st.subheader("Suggested BWB")
 
 call_long = call_wall
 call_short = call_wall + 5
@@ -113,13 +124,9 @@ with b2:
 
 st.divider()
 
-# --- Gamma danger zone ---
+# ---------- DANGER ZONE ----------
 danger_low = call_short - 10
 danger_high = call_short + 10
 
 st.subheader("Gamma Danger Zone")
 st.warning(f"{danger_low} — {danger_high}")
-
-st.divider()
-
-st.info("Tip: If SPX approaches the danger zone, consider closing or hedging the BWB.")
