@@ -8,8 +8,16 @@ st.set_page_config(page_title="SPX Cockpit v4", layout="wide")
 st.title("SPX Trading Cockpit v4")
 
 # --- Live market data ---
-spx = yf.Ticker("^GSPC").history(period="1d", interval="1m")["Close"].iloc[-1]
-vix = yf.Ticker("^VIX").history(period="1d", interval="1m")["Close"].iloc[-1]
+try:
+    spx_data = yf.download("^GSPC", period="1d", interval="5m")
+    vix_data = yf.download("^VIX", period="1d", interval="5m")
+
+    spx = float(spx_data["Close"].iloc[-1])
+    vix = float(vix_data["Close"].iloc[-1])
+
+except:
+    spx = 0
+    vix = 0
 
 m1, m2, m3 = st.columns(3)
 m1.metric("SPX", round(spx,2))
