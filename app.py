@@ -11,6 +11,30 @@ st.title("SPX Trading Cockpit")
 def get_market_data():
 
     try:
+
+        spx = yf.download(
+            "^GSPC",
+            period="5d",
+            interval="1d",
+            progress=False
+        )["Close"].iloc[-1]
+
+        vix = yf.download(
+            "^VIX",
+            period="5d",
+            interval="1d",
+            progress=False
+        )["Close"].iloc[-1]
+
+        return float(spx), float(vix)
+
+    except Exception as e:
+
+        st.warning("Market data unavailable from Yahoo")
+
+        return None, None
+
+    try:
         spx_data = yf.download("^GSPC", period="1d", interval="5m")
         vix_data = yf.download("^VIX", period="1d", interval="5m")
 
@@ -25,6 +49,8 @@ def get_market_data():
 
 
 spx, vix = get_market_data()
+if spx is None or vix is None:
+    st.stop()
 
 col1, col2 = st.columns(2)
 
