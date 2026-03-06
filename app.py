@@ -68,13 +68,10 @@ st.markdown("### Danger Zone")
 st.warning(f"{danger_low} — {danger_high}")
 
 # ---------- MARKET DATA ----------
-import pandas as pd
-import yfinance as yf
 
 @st.cache_data(ttl=300)
 def get_market_data():
 
-    # ---- TRY STOOQ ----
     try:
 
         spx_data = pd.read_csv(
@@ -85,33 +82,24 @@ def get_market_data():
             "https://stooq.com/q/d/l/?s=^vix&i=d"
         )
 
-        spx = float(spx_data["Close"].iloc[-1])
-        vix = float(vix_data["Close"].iloc[-1])
+        spx_val = float(spx_data["Close"].iloc[-1])
+        vix_val = float(vix_data["Close"].iloc[-1])
 
-        return spx, vix
-
-    except:
-        pass
-
-    # ---- TRY YAHOO ----
-    try:
-
-        spx = yf.download("^GSPC", period="5d")["Close"].iloc[-1]
-        vix = yf.download("^VIX", period="5d")["Close"].iloc[-1]
-
-        return float(spx), float(vix)
+        return spx_val, vix_val
 
     except:
-        pass
 
-    # ---- FALLBACK ----
-    return None, None
+        return None, None
 
 
 spx, vix = get_market_data()
 
 if spx is None or vix is None:
+
     st.error("Market data unavailable")
+
+    spx = 0
+    vix = 0
     st.stop()
 
 col1, col2 = st.columns(2)
