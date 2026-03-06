@@ -32,6 +32,15 @@ p1.metric("Pin", pin_level)
 p2.metric("Distance", round(distance,1) if distance else "N/A")
 p3.metric("Prob", pin_prob)
 
+
+st.markdown("### Friday Pin Model")
+
+pf1, pf2, pf3 = st.columns(3)
+
+pf1.metric("Pin Level", pin_level)
+pf2.metric("Probability", f"{pin_friday_prob}%")
+pf3.metric("Bias", pin_bias)
+
 st.markdown("---")
 
 st.markdown("### Trade Signal")
@@ -156,6 +165,20 @@ st.divider()
 pin_level = gamma_node if gamma_node else max_pain
 
 distance = abs(spx - pin_level) if pin_level else None
+
+# -------- PIN FRIDAY MODEL --------
+
+if distance < 30:
+    pin_friday_prob = 85
+    pin_bias = "STRONG PIN"
+
+elif distance < 80:
+    pin_friday_prob = 60
+    pin_bias = "PIN DRIFT"
+
+else:
+    pin_friday_prob = 30
+    pin_bias = "TREND RISK"
 
 
 # -------- TRADE DETECTOR --------
