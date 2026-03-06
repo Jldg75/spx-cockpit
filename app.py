@@ -6,6 +6,57 @@ import math
 st.set_page_config(page_title="SPX Cockpit", layout="wide")
 
 st.title("SPX Trading Cockpit")
+st.markdown("### Market")
+
+m1, m2 = st.columns(2)
+
+m1.metric("SPX", round(spx,2))
+m2.metric("VIX", round(vix,2))
+
+st.markdown("---")
+
+st.markdown("### Expected Move")
+
+st.metric(
+    "Range",
+    f"{round(lower)} — {round(upper)}"
+)
+
+st.markdown("---")
+
+st.markdown("### Pin Model")
+
+p1, p2, p3 = st.columns(3)
+
+p1.metric("Pin", pin_level)
+p2.metric("Distance", round(distance,1) if distance else "N/A")
+p3.metric("Prob", pin_prob)
+
+st.markdown("---")
+
+st.markdown("### Trade Signal")
+
+st.success(trade_signal)
+
+st.markdown("---")
+
+st.markdown("### Strikes")
+
+s1, s2 = st.columns(2)
+
+with s1:
+    st.write("CALL")
+    st.write(f"{call_long} / {call_short} / {call_wing}")
+
+with s2:
+    st.write("PUT")
+    st.write(f"{put_long} / {put_short} / {put_wing}")
+
+st.markdown("---")
+
+st.markdown("### Danger Zone")
+
+st.warning(f"{danger_low} — {danger_high}")
 
 # ---------- MARKET DATA ----------
 import pandas as pd
@@ -97,14 +148,24 @@ pin_level = gamma_node if gamma_node else max_pain
 
 distance = abs(spx - pin_level) if pin_level else None
 
+
+# -------- TRADE DETECTOR --------
+
 if distance is None:
-    pin_prob = "N/A"
+    setup = "UNKNOWN"
+    recommendation = "WAIT"
+
 elif distance < 30:
-    pin_prob = "HIGH"
+    setup = "GAMMA COMPRESSION"
+    recommendation = "DOUBLE BWB"
+
 elif distance < 80:
-    pin_prob = "MEDIUM"
+    setup = "PIN DRIFT"
+    recommendation = "BWB"
+
 else:
-    pin_prob = "LOW"
+    setup = "TREND RISK"
+    recommendation = "WAIT"
 
 p1, p2, p3 = st.columns(3)
 
