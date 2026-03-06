@@ -119,6 +119,15 @@ weekly_em = daily_em * math.sqrt(5)
 upper = spx + weekly_em
 lower = spx - weekly_em
 
+
+# -------- PROBABILITY ENGINE --------
+
+call_distance = abs(call_short - spx)
+put_distance = abs(spx - put_short)
+
+call_prob = min(100, round((weekly_em / call_distance) * 50, 1)) if call_distance > 0 else 100
+put_prob = min(100, round((weekly_em / put_distance) * 50, 1)) if put_distance > 0 else 100
+
 st.subheader("Expected Move")
 
 e1, e2, e3 = st.columns(3)
@@ -187,6 +196,14 @@ else:
 
 st.subheader("Trade Signal")
 st.success(trade_signal)
+
+
+st.markdown("### Probability of Touch")
+
+p1, p2 = st.columns(2)
+
+p1.metric("Call Side", f"{call_prob}%")
+p2.metric("Put Side", f"{put_prob}%")
 
 st.divider()
 
