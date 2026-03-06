@@ -1,5 +1,5 @@
 import streamlit as st
-import yfinance as yf
+import pandas as pd
 import math
 
 st.set_page_config(page_title="SPX Cockpit", layout="wide")
@@ -12,44 +12,28 @@ def get_market_data():
 
     try:
 
-        spx = yf.download(
-            "^GSPC",
-            period="5d",
-            interval="1d",
-            progress=False
-        )["Close"].iloc[-1]
+        spx_data = pd.read_csv(
+            "https://stooq.com/q/d/l/?s=^spx&i=d"
+        )
 
-        vix = yf.download(
-            "^VIX",
-            period="5d",
-            interval="1d",
-            progress=False
-        )["Close"].iloc[-1]
-
-        return float(spx), float(vix)
-
-    except Exception as e:
-
-        st.warning("Market data unavailable from Yahoo")
-
-        return None, None
-
-    try:
-        spx_data = yf.download("^GSPC", period="1d", interval="5m")
-        vix_data = yf.download("^VIX", period="1d", interval="5m")
+        vix_data = pd.read_csv(
+            "https://stooq.com/q/d/l/?s=^vix&i=d"
+        )
 
         spx = float(spx_data["Close"].iloc[-1])
         vix = float(vix_data["Close"].iloc[-1])
 
-    except:
-        spx = 0
-        vix = 0
+        return spx, vix
 
-    return spx, vix
+    except:
+
+        return None, None
 
 
 spx, vix = get_market_data()
+
 if spx is None or vix is None:
+    st.error("Market data unavailable")
     st.stop()
 
 col1, col2 = st.columns(2)
@@ -76,7 +60,7 @@ e3.metric("Range", f"{round(lower)} — {round(upper)}")
 
 st.divider()
 
-# ---------- INPUT DATA ----------
+# ---------- MARKET STRUCTURE ----------
 st.subheader("Market Structure")
 
 c1, c2, c3, c4 = st.columns(4)
