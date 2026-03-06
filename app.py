@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import yfinance as yf
 import math
 
 st.set_page_config(page_title="SPX Cockpit", layout="wide")
@@ -7,9 +8,13 @@ st.set_page_config(page_title="SPX Cockpit", layout="wide")
 st.title("SPX Trading Cockpit")
 
 # ---------- MARKET DATA ----------
+import pandas as pd
+import yfinance as yf
+
 @st.cache_data(ttl=300)
 def get_market_data():
 
+    # ---- TRY STOOQ ----
     try:
 
         spx_data = pd.read_csv(
@@ -26,8 +31,21 @@ def get_market_data():
         return spx, vix
 
     except:
+        pass
 
-        return None, None
+    # ---- TRY YAHOO ----
+    try:
+
+        spx = yf.download("^GSPC", period="5d")["Close"].iloc[-1]
+        vix = yf.download("^VIX", period="5d")["Close"].iloc[-1]
+
+        return float(spx), float(vix)
+
+    except:
+        pass
+
+    # ---- FALLBACK ----
+    return None, None
 
 
 spx, vix = get_market_data()
