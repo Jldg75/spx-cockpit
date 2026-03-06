@@ -6,6 +6,11 @@ import math
 st.set_page_config(page_title="SPX Cockpit", layout="wide")
 
 st.title("SPX Trading Cockpit")
+
+refresh = st.button("🔄 Update Market Data")
+
+if refresh:
+    st.cache_data.clear()
 st.markdown("### Market")
 
 m1, m2 = st.columns(2)
